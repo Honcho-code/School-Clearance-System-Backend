@@ -1,21 +1,11 @@
 import 'dotenv/config'
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-})
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function sendMail({ to, subject, html }) {
-  if (!process.env.GMAIL_USER) {
-    console.error('❌ GMAIL_USER is not set in .env')
-    return
-  }
-  if (!process.env.GMAIL_APP_PASSWORD) {
-    console.error('❌ GMAIL_APP_PASSWORD is not set in .env')
+  if (!process.env.RESEND_API_KEY) {
+    console.error('❌ RESEND_API_KEY is not set in .env')
     return
   }
   if (!to) {
@@ -26,16 +16,21 @@ export async function sendMail({ to, subject, html }) {
   try {
     console.log(`📧 Sending email → to: ${to} | subject: ${subject}`)
 
-    const info = await transporter.sendMail({
-      from: `"OUI Clearance" <${process.env.GMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      from: 'OUI Clearance <onboarding@resend.dev>',
       to,
       subject,
       html,
     })
 
-    console.log(`✅ Mail sent to ${to} | ID: ${info.messageId}`)
+    if (error) {
+      console.error(`❌ Resend error for ${to}:`, error.message)
+      return
+    }
+
+    console.log(`✅ Mail sent to ${to} | ID: ${data.id}`)
   } catch (err) {
-    console.error(`❌ Gmail SMTP error for ${to}:`, err.message)
+    console.error(`❌ Resend SMTP error for ${to}:`, err.message)
   }
 }
 
