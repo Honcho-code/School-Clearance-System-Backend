@@ -1,11 +1,16 @@
 import 'dotenv/config'
-import { Resend } from 'resend'
+import brevo from '@getbrevo/brevo'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const apiInstance = new brevo.TransactionalEmailsApi()
+apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY)
 
 export async function sendMail({ to, subject, html }) {
-  if (!process.env.RESEND_API_KEY) {
-    console.error('❌ RESEND_API_KEY is not set in .env')
+  if (!process.env.BREVO_API_KEY) {
+    console.error('❌ BREVO_API_KEY is not set in .env')
+    return
+  }
+  if (!process.env.BREVO_FROM_EMAIL) {
+    console.error('❌ BREVO_FROM_EMAIL is not set in .env')
     return
   }
   if (!to) {
@@ -16,21 +21,18 @@ export async function sendMail({ to, subject, html }) {
   try {
     console.log(`📧 Sending email → to: ${to} | subject: ${subject}`)
 
-    const { data, error } = await resend.emails.send({
-      from: 'OUI Clearance <onboarding@resend.dev>',
-      to,
-      subject,
-      html,
-    })
+    const email = new brevo.SendSmtpEmail()
+    email.sender      = { email: process.env.BREVO_FROM_EMAIL, name: 'OUI Clearance' }
+    email.to          = [{ email: to }]
+    email.subject     = subject
+    email.htmlContent = html
 
-    if (error) {
-      console.error(`❌ Resend error for ${to}:`, error.message)
-      return
-    }
+    const response = await apiInstance.sendTransacEmail(email)
 
-    console.log(`✅ Mail sent to ${to} | ID: ${data.id}`)
+    console.log(`✅ Mail sent to ${to} | messageId: ${response.body?.messageId || 'n/a'}`)
   } catch (err) {
-    console.error(`❌ Resend SMTP error for ${to}:`, err.message)
+    const detail = err.response?.body?.message || err.message
+    console.error(`❌ Brevo error for ${to}:`, detail)
   }
 }
 
