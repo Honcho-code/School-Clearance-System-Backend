@@ -10,7 +10,7 @@ export async function sendMail({ to, subject, html }) {
     return
   }
   if (!process.env.BREVO_FROM_EMAIL) {
-    console.error('❌ BREVO_FROM_EMAIL is not set in .env')
+    console.error('❌ BREVO_FROM_EMAIL is not set in .env now')
     return
   }
   if (!to) {
