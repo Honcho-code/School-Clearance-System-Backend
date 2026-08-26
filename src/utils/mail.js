@@ -1,8 +1,7 @@
 import 'dotenv/config'
-import { TransactionalEmailsApi, TransactionalEmailsApiApiKeys, SendSmtpEmail } from '@getbrevo/brevo'
+import { BrevoClient } from '@getbrevo/brevo'
 
-const apiInstance = new TransactionalEmailsApi()
-apiInstance.setApiKey(TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY)
+const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY })
 
 export async function sendMail({ to, subject, html }) {
   if (!process.env.BREVO_API_KEY) {
@@ -21,15 +20,14 @@ export async function sendMail({ to, subject, html }) {
   try {
     console.log(`📧 Sending email → to: ${to} | subject: ${subject}`)
 
-    const email = new SendSmtpEmail()
-    email.sender      = { email: process.env.BREVO_FROM_EMAIL, name: 'OUI Clearance' }
-    email.to          = [{ email: to }]
-    email.subject     = subject
-    email.htmlContent = html
+    const response = await brevo.transactionalEmails.sendTransacEmail({
+      sender: { email: process.env.BREVO_FROM_EMAIL, name: 'OUI Clearance' },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    })
 
-    const response = await apiInstance.sendTransacEmail(email)
-
-    console.log(`✅ Mail sent to ${to} | messageId: ${response.body?.messageId || 'n/a'}`)
+    console.log(`✅ Mail sent to ${to} | messageId: ${response?.messageId || 'n/a'}`)
   } catch (err) {
     const detail = err.response?.body?.message || err.message
     console.error(`❌ Brevo error for ${to}:`, detail)
