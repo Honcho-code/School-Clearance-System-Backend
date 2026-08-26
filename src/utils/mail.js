@@ -1,8 +1,8 @@
 import 'dotenv/config'
-import * as brevo from '@getbrevo/brevo'
+import { TransactionalEmailsApi, TransactionalEmailsApiApiKeys, SendSmtpEmail } from '@getbrevo/brevo'
 
-const apiInstance = new brevo.TransactionalEmailsApi()
-apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY)
+const apiInstance = new TransactionalEmailsApi()
+apiInstance.setApiKey(TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY)
 
 export async function sendMail({ to, subject, html }) {
   if (!process.env.BREVO_API_KEY) {
@@ -21,7 +21,7 @@ export async function sendMail({ to, subject, html }) {
   try {
     console.log(`📧 Sending email → to: ${to} | subject: ${subject}`)
 
-    const email = new brevo.SendSmtpEmail()
+    const email = new SendSmtpEmail()
     email.sender      = { email: process.env.BREVO_FROM_EMAIL, name: 'OUI Clearance' }
     email.to          = [{ email: to }]
     email.subject     = subject
